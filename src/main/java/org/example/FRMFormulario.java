@@ -1,10 +1,10 @@
 package org.example;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class FRMFormulario extends JFrame{
     private JPanel Formulario;
@@ -32,12 +32,33 @@ public class FRMFormulario extends JFrame{
     private JButton JBVisualizar;
     private JButton JBRegresar;
     private JLabel JLMensaje;
+    private JTextField JTVictorias;
+    private ButtonGroup jugadores;
+    private ButtonGroup pagos;
+    private ButtonGroup estado;
 
+    PrimeraEdicion[] primeraEdicion=new PrimeraEdicion[20];
+    int array=0;
 
     public FRMFormulario() {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setContentPane(Formulario);
         setSize(700,900);
+
+        jugadores=new ButtonGroup();
+        jugadores.add(JRJugador1);
+        jugadores.add(JRJugador2);
+        jugadores.add(JRJugador3);
+        jugadores.add(JRJugador4);
+        jugadores.add(JRJugador5);
+
+        pagos=new ButtonGroup();
+        pagos.add(JRPagado);
+        pagos.add(JRinpago);
+
+        estado=new ButtonGroup();
+        estado.add(JRVencedor);
+        estado.add(JREliminado);
 
 
         JBRegresar.addActionListener(new ActionListener() {
@@ -46,37 +67,77 @@ public class FRMFormulario extends JFrame{
                 FRMIngreso frmIngreso=new FRMIngreso();
                 frmIngreso.setVisible(true);
                 Formulario.setVisible(false);
-            }
-        });
-        JSVictorias.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                victorias();
+                mensaje();
             }
         });
         JBRegistrar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                mensaje();
                 boolean posible=posible();
                 if (posible==true){
-                    PrimeraEdicion primeraEdicion=new PrimeraEdicion(jugadores(),JTEquipo.getText(),Float.parseFloat((String) JSVictorias.getValue()),inscripcion(),estado(),JTANotas.getText());
-                }
+                    primeraEdicion[array]=new PrimeraEdicion(jugadores(),JTEquipo.getText(), Float.parseFloat(JTVictorias.getText()),inscripcion(),estado(),JTANotas.getText());
+                    array++;
+                    JLMensaje.setText("Registro hecho con exito");
+                } else if (array==20) {
+                    JLMensaje.setText("Array lleno");
+                }else {JLMensaje.setText("Faltan datos");}
+            }
+        });
+        JBVisualizar.addActionListener(e -> {
+            mensaje();
+            if(array==0){
+                JLMensaje.setText("Necesita hacer el registro");
+            }
+            else {
+                this.setVisible(false);
+                FRMInformacion frm = new FRMInformacion(primeraEdicion,this);
+                frm.setVisible(true);
+            }
+        });
+        JTVictorias.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                super.keyTyped(e);
+                mensaje();
+                victorias(e);
+            }
+        });
+
+
+        JBLimpiar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mensaje();
+                JTEquipo.setText("");
+                jugadores.clearSelection();
+                pagos.clearSelection();
+                estado.clearSelection();
+                JTVictorias.setText("");
+                JTANotas.setText("");
+            }
+        });
+        JTEquipo.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                super.keyTyped(e);
+                mensaje();
             }
         });
     }
-    private void victorias(){
-        int valor =Integer.parseInt(JSVictorias.getValue().toString());
-        if (0 > valor) {
-            JSVictorias.setValue(0);
-        } else if (valor > 100) {
-            JSVictorias.setValue(100);
+    private void victorias(KeyEvent e){
+        if (!(Character.isDigit(e.getKeyChar()))){
+            e.consume();
         }
+
     }
 
     private boolean posible(){
         boolean posible=false,rbuttons=RadioButtons();
-        if (!(JTEquipo.getText().trim().isEmpty())&&rbuttons==true){
-            posible=true;
+        if (!(JTEquipo.getText().trim().isEmpty() || JTVictorias.getText().trim().isEmpty())&&rbuttons==true){
+            if (array<20) {
+                posible = true;
+            }
         }return posible;
     }
 
@@ -90,7 +151,8 @@ public class FRMFormulario extends JFrame{
         else if (JRJugador2.isSelected()) {cantidad=2;}
         else if (JRJugador3.isSelected()) {cantidad=3;}
         else if (JRJugador4.isSelected()) {cantidad=4;}
-        else {cantidad=5;}return cantidad;
+        else {cantidad=5;}
+        return cantidad;
     }
 
     private boolean inscripcion(){
@@ -101,5 +163,9 @@ public class FRMFormulario extends JFrame{
     private boolean estado(){
         if (JRVencedor.isSelected()){return true;}
         else {return false;}
+    }
+
+    private void mensaje(){
+        JLMensaje.setText("");
     }
 }
